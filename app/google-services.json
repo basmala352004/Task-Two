@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1027635913015",
+    "project_id": "task2-ada3d",
+    "storage_bucket": "task2-ada3d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1027635913015:android:8058bff351591481a83ab2",
+        "android_client_info": {
+          "package_name": "Task.Two"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAs7mVZjmndCEVpVRbCbvU9cgSOemGJEg4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1027635913015:android:ed6bf9df7cbbdaada83ab2",
+        "android_client_info": {
+          "package_name": "com.example.tasktwo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAs7mVZjmndCEVpVRbCbvU9cgSOemGJEg4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
