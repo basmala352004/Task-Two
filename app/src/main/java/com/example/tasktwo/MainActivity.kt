@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -16,6 +17,8 @@ import com.google.firebase.messaging.FirebaseMessaging
 class MainActivity : AppCompatActivity() {
 
     private lateinit var tokenTextView: TextView
+    private lateinit var subscribeButton: Button
+    private lateinit var unsubscribeButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,11 +30,29 @@ class MainActivity : AppCompatActivity() {
         tokenTextView = findViewById(R.id.tokenTextView)
         tokenTextView.text = "Initializing..."
 
-        // Request notification permission
-        requestNotificationPermission()
+        subscribeButton = findViewById(R.id.subscribeButton)
+        unsubscribeButton = findViewById(R.id.unsubscribeButton)
 
-        // Get FCM token
+        requestNotificationPermission()
         getFCMToken()
+
+        subscribeButton.setOnClickListener {
+            FirebaseMessaging.getInstance().subscribeToTopic("cloud")
+                .addOnCompleteListener { task ->
+                    val msg = if (task.isSuccessful) "Subscribed to topic: cloud" else "Subscription failed"
+                    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                    Log.d("MainActivity", msg)
+                }
+        }
+
+        unsubscribeButton.setOnClickListener {
+            FirebaseMessaging.getInstance().unsubscribeFromTopic("cloud")
+                .addOnCompleteListener { task ->
+                    val msg = if (task.isSuccessful) "Unsubscribed from topic: cloud" else "Unsubscription failed"
+                    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                    Log.d("MainActivity", msg)
+                }
+        }
     }
 
     private fun requestNotificationPermission() {

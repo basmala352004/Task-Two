@@ -31,4 +31,20 @@
         android:padding="10dp"
         android:background="#EEEEEE"/>
 
+    <Button
+        android:id="@+id/subscribeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Subscribe to Cloud" />
+
+    <Button
+        android:id="@+id/unsubscribeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Unsubscribe from Cloud"
+        android:layout_marginTop="8dp"
+        android:layout_gravity="center_horizontal" />
+
+
+
 </LinearLayout>

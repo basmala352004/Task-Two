@@ -12,28 +12,23 @@ import com.google.firebase.messaging.RemoteMessage
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
-    // This runs when a message arrives
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
         Log.d(TAG, "Message received from: ${remoteMessage.from}")
 
-        // Check if message contains data payload
         if (remoteMessage.data.isNotEmpty()) {
             Log.d(TAG, "Message data: ${remoteMessage.data}")
             handleDataMessage(remoteMessage.data)
         }
 
-        // Show notification if app is in foreground
         remoteMessage.notification?.let {
             showNotification(it.title ?: "New Message", it.body ?: "")
         }
     }
 
-    // Handle subscribe/unsubscribe logic
     private fun handleDataMessage(data: Map<String, String>) {
 
-        // Check for subscribe command
         if (data.containsKey("subscribeToTopic")) {
             val topic = data["subscribeToTopic"]
             if (!topic.isNullOrEmpty()) {
@@ -41,7 +36,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             }
         }
 
-        // Check for unsubscribe command
         if (data.containsKey("unsubscribeToTopic")) {
             val topic = data["unsubscribeToTopic"]
             if (!topic.isNullOrEmpty()) {
@@ -50,7 +44,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    // Subscribe to a topic
     private fun subscribeToTopic(topic: String) {
         FirebaseMessaging.getInstance().subscribeToTopic(topic)
             .addOnCompleteListener { task ->
@@ -62,7 +55,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             }
     }
 
-    // Unsubscribe from a topic
     private fun unsubscribeFromTopic(topic: String) {
         FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
             .addOnCompleteListener { task ->
@@ -74,12 +66,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             }
     }
 
-    // Show notification to user
     private fun showNotification(title: String, body: String) {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "fcm_default_channel"
 
-        // Create notification channel for Android 8.0+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
@@ -89,7 +79,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        // Build and show notification
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle(title)
             .setContentText(body)
@@ -100,11 +89,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         notificationManager.notify(0, notification)
     }
 
-    // This runs when FCM token is generated/refreshed
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Log.d(TAG, "New FCM Token: $token")
-        // You can send this token to your server if needed
     }
 
     companion object {
