@@ -1,8 +1,9 @@
 {
   "project_info": {
-    "project_number": "1027635913015",
-    "project_id": "task2-ada3d",
-    "storage_bucket": "task2-ada3d.firebasestorage.app"
+    "project_number": "777101905809",
+    "firebase_url": "https://task1-e93a1-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "task1-e93a1",
+    "storage_bucket": "task1-e93a1.firebasestorage.app"
   },
   "client": [
     {

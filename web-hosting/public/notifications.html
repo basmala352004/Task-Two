@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications History</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .no-data-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.3s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9ff;
+        }
+
+        td {
+            padding: 15px;
+            vertical-align: top;
+        }
+
+        .timestamp {
+            color: #667eea;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .notification-body {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .data-payload {
+            background: #f5f5f5;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #555;
+            max-width: 300px;
+            word-break: break-all;
+        }
+
+        .message-id {
+            color: #999;
+            font-size: 0.85em;
+            font-family: monospace;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: #f8f9ff;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            table {
+                font-size: 0.9em;
+            }
+
+            th, td {
+                padding: 10px 5px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>📬 Notifications History</h1>
+        <p class="subtitle">View all received push notifications</p>
+    </header>
+
+    <div class="content">
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-item">
+                <div class="stat-number" id="totalCount">0</div>
+                <div class="stat-label">Total Notifications</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="todayCount">0</div>
+                <div class="stat-label">Today</div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div>⏳ Loading notifications...</div>
+        </div>
+
+        <div id="noData" class="no-data" style="display: none;">
+            <div class="no-data-icon">📭</div>
+            <h2>No Notifications Yet</h2>
+            <p>When you receive push notifications, they will appear here.</p>
+        </div>
+
+        <table id="notificationsTable" style="display: none;">
+            <thead>
+            <tr>
+                <th>Date & Time</th>
+                <th>Notification</th>
+                <th>Data Payload</th>
+                <th>Message ID</th>
+            </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPUFwzUZqgYwepyt2hWSF0MgdDU7HUeDQ",
+      authDomain: "task1-e93a1.firebaseapp.com",
+      databaseURL: "https://task1-e93a1-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "task1-e93a1",
+      storageBucket: "task1-e93a1.firebasestorage.app",
+      messagingSenderId: "777101905809",
+      appId: "1:777101905809:web:f7b2ab9cd7c447f53e9430",
+      measurementId: "G-629DCSZGFK"
+    };
+
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    // Reference to notifications
+    const notificationsRef = ref(database, 'notifications');
+
+    // Listen for data
+    onValue(notificationsRef, (snapshot) => {
+        const loading = document.getElementById('loading');
+        const noData = document.getElementById('noData');
+        const table = document.getElementById('notificationsTable');
+        const tableBody = document.getElementById('tableBody');
+        const stats = document.getElementById('stats');
+
+        loading.style.display = 'none';
+
+        if (!snapshot.exists()) {
+            noData.style.display = 'block';
+            table.style.display = 'none';
+            stats.style.display = 'none';
+            return;
+        }
+
+        const notifications = [];
+        snapshot.forEach((childSnapshot) => {
+            notifications.push({
+                id: childSnapshot.key,
+                ...childSnapshot.val()
+            });
+        });
+
+        // Sort by timestamp (newest first)
+        notifications.sort((a, b) => b.timestamp - a.timestamp);
+
+        // Calculate stats
+        const today = new Date().setHours(0, 0, 0, 0);
+        const todayNotifications = notifications.filter(n =>
+            new Date(n.timestamp).setHours(0, 0, 0, 0) === today
+        );
+
+        document.getElementById('totalCount').textContent = notifications.length;
+        document.getElementById('todayCount').textContent = todayNotifications.length;
+
+        // Display data
+        noData.style.display = 'none';
+        table.style.display = 'table';
+        stats.style.display = 'flex';
+
+        tableBody.innerHTML = '';
+        notifications.forEach(notification => {
+            const row = document.createElement('tr');
+
+            const date = new Date(notification.timestamp);
+            const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+
+            row.innerHTML = `
+                <td class="timestamp">${formattedDate}</td>
+                <td>
+                    <div class="notification-title">${notification.notificationTitle || 'No Title'}</div>
+                    <div class="notification-body">${notification.notificationBody || 'No Body'}</div>
+                </td>
+                <td><div class="data-payload">${notification.dataPayload || '{}'}</div></td>
+                <td><div class="message-id">${notification.messageId || 'N/A'}</div></td>
+            `;
+
+            tableBody.appendChild(row);
+        });
+    });
+</script>
+</body>
+</html>

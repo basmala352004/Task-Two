@@ -2,96 +2,110 @@ package com.example.tasktwo
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.DatabaseReference
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
+
+    private lateinit var database: DatabaseReference
+
+    override fun onCreate() {
+        super.onCreate()
+
+        // Connect to Task1 database
+        val firebaseDatabase = FirebaseDatabase.getInstance("https://task1-e93a1-default-rtdb.europe-west1.firebasedatabase.app/")
+        database = firebaseDatabase.getReference("notifications")
+
+        Log.d(TAG, "Connected to Task1 Firebase Database")
+    }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
         Log.d(TAG, "Message received from: ${remoteMessage.from}")
 
-        if (remoteMessage.data.isNotEmpty()) {
-            Log.d(TAG, "Message data: ${remoteMessage.data}")
-            handleDataMessage(remoteMessage.data)
-        }
+        // Store notification in database
+        storeNotificationInDatabase(remoteMessage)
 
+        // Handle notification payload
         remoteMessage.notification?.let {
-            showNotification(it.title ?: "New Message", it.body ?: "")
+            Log.d(TAG, "Notification Title: ${it.title}")
+            Log.d(TAG, "Notification Body: ${it.body}")
+            showNotification(it.title ?: "No Title", it.body ?: "No Body")
+        }
+
+        // Handle data payload
+        if (remoteMessage.data.isNotEmpty()) {
+            Log.d(TAG, "Message data payload: ${remoteMessage.data}")
         }
     }
 
-    private fun handleDataMessage(data: Map<String, String>) {
+    private fun storeNotificationInDatabase(remoteMessage: RemoteMessage) {
+        val notificationId = database.push().key ?: return
 
-        if (data.containsKey("subscribeToTopic")) {
-            val topic = data["subscribeToTopic"]
-            if (!topic.isNullOrEmpty()) {
-                subscribeToTopic(topic)
+        val notificationData = hashMapOf(
+            "timestamp" to System.currentTimeMillis(),
+            "from" to (remoteMessage.from ?: "Unknown"),
+            "notificationTitle" to (remoteMessage.notification?.title ?: ""),
+            "notificationBody" to (remoteMessage.notification?.body ?: ""),
+            "dataPayload" to remoteMessage.data.toString(),
+            "messageId" to (remoteMessage.messageId ?: "")
+        )
+
+        database.child(notificationId).setValue(notificationData)
+            .addOnSuccessListener {
+                Log.d(TAG, "Notification stored successfully")
             }
-        }
-
-        if (data.containsKey("unsubscribeToTopic")) {
-            val topic = data["unsubscribeToTopic"]
-            if (!topic.isNullOrEmpty()) {
-                unsubscribeFromTopic(topic)
-            }
-        }
-    }
-
-    private fun subscribeToTopic(topic: String) {
-        FirebaseMessaging.getInstance().subscribeToTopic(topic)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.d(TAG, "Subscribed to topic: $topic")
-                } else {
-                    Log.e(TAG, "Failed to subscribe to topic: $topic")
-                }
-            }
-    }
-
-    private fun unsubscribeFromTopic(topic: String) {
-        FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.d(TAG, "Unsubscribed from topic: $topic")
-                } else {
-                    Log.e(TAG, "Failed to unsubscribe from topic: $topic")
-                }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Failed to store notification", e)
             }
     }
 
     private fun showNotification(title: String, body: String) {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val channelId = "default_channel"
+        val notificationBuilder = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "fcm_default_channel"
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
-                "FCM Notifications",
+                "Default Channel",
                 NotificationManager.IMPORTANCE_HIGH
             )
             notificationManager.createNotificationChannel(channel)
         }
 
-        val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle(title)
-            .setContentText(body)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setAutoCancel(true)
-            .build()
-
-        notificationManager.notify(0, notification)
+        notificationManager.notify(0, notificationBuilder.build())
     }
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Log.d(TAG, "New FCM Token: $token")
+        Log.d(TAG, "New FCM token: $token")
+        // Send token to your server if needed
     }
 
     companion object {

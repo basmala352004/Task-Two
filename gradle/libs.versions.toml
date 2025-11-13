@@ -10,6 +10,8 @@ activityCompose = "1.8.0"
 composeBom = "2024.09.00"
 appcompat = "1.7.1"
 firebaseBom = "33.1.0"
+firebaseDatabaseKtx = "20.3.0"
+firebaseDatabase = "22.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -33,6 +35,8 @@ androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-te
 # Firebase Bill of Materials (BOM)
 firebaseBom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebaseMessaging = { group = "com.google.firebase", name = "firebase-messaging" }
+firebase-database-ktx = { group = "com.google.firebase", name = "firebase-database-ktx", version.ref = "firebaseDatabaseKtx" }
+firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
 
 [plugins]
 android-application = { id = "com.android.application", version = "8.3.0" }
